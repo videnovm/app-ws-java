@@ -16,6 +16,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.app.ws.SpringAppContext;
+import com.app.ws.service.UserService;
+import com.app.ws.shared.dto.UserDto;
 import com.app.ws.ui.model.request.UserLoginRequestModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,10 +36,15 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	public Authentication attemptAuthentication(HttpServletRequest request,
 												HttpServletResponse response) throws AuthenticationException {
 		try {
-			UserLoginRequestModel creds = new ObjectMapper().readValue(request.getInputStream(), UserLoginRequestModel.class);
+			UserLoginRequestModel creds = new ObjectMapper()
+					.readValue(request.getInputStream(), UserLoginRequestModel.class);
 			
 			return authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), new ArrayList<>())
+					new UsernamePasswordAuthenticationToken(
+							creds.getEmail(), 
+							creds.getPassword(), 
+							new ArrayList<>()
+							)
 					);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -53,9 +61,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		String token = Jwts.builder()
 				.setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-				.signWith(SignatureAlgorithm.HS512, SecurityConstants.TOKEN_SECRET)
+				.signWith(SignatureAlgorithm.HS512, SecurityConstants.getTokenSecret())
 				.compact();
+		
+		UserService userService = (UserService)SpringAppContext.getBean("userServiceImpl");
+		UserDto userDto = userService.getUser(userName); 
+		
 		response.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
+		response.addHeader("UserID", userDto.getUserId());
 	}
 	
 	
