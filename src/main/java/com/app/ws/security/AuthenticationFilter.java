@@ -22,6 +22,7 @@ import com.app.ws.shared.dto.UserDto;
 import com.app.ws.ui.model.request.UserLoginRequestModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -44,11 +45,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 							creds.getEmail(), 
 							creds.getPassword(), 
 							new ArrayList<>()
-							)
+							)	
 					);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
-		}
+			} 
 	}
 	
 	@Override
@@ -56,7 +57,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 											HttpServletResponse response,
 											FilterChain chain,
 											Authentication auth) throws IOException, ServletException {
-		String userName = ((User) auth.getPrincipal()).getUsername();
+		try {
+			String userName = ((User) auth.getPrincipal()).getUsername();
 		
 		String token = Jwts.builder()
 				.setSubject(userName)
@@ -69,6 +71,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		
 		response.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 		response.addHeader("UserID", userDto.getUserId());
+		} catch(ExpiredJwtException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	

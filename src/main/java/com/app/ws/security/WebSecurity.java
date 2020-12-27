@@ -29,9 +29,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 		.permitAll().anyRequest()
 		.authenticated()
 		.and().addFilter(getAuthenticationFilter())
-		.addFilter(new AutherizationFilter(authenticationManager()))
-		.sessionManagement()
-		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		.addFilter(new AutherizationFilter(authenticationManager()));
+		//.sessionManagement()
+		//.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}
 	
 	@Override
