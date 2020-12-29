@@ -17,6 +17,9 @@ import com.app.ws.service.UserService;
 import com.app.ws.shared.dto.UserDto;
 import com.app.ws.ui.model.request.UserDetailsRequestModel;
 import com.app.ws.ui.model.response.ApiErrorMessages;
+import com.app.ws.ui.model.response.OperationStatusModel;
+import com.app.ws.ui.model.response.RequestOperationName;
+import com.app.ws.ui.model.response.RequestOperationStatus;
 import com.app.ws.ui.model.response.UserRest;
 
 import ch.qos.logback.core.joran.util.beans.BeanUtil;
@@ -65,8 +68,16 @@ public class UserController {
 		return returnValue;
 	}
 
-	@DeleteMapping
-	public String deleteUser() {
-		return "delete user was called";
+	@DeleteMapping(path = "/{id}", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+	public OperationStatusModel deleteUser(@PathVariable String id) {
+		
+		OperationStatusModel returnValue = new OperationStatusModel();
+		
+		returnValue.setOperationName(RequestOperationName.DELETE.name());
+		
+		userService.deleteUser(id);
+		returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		
+		return returnValue; 
 	}
 }
