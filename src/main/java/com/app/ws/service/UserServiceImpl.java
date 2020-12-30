@@ -3,6 +3,7 @@ package com.app.ws.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import com.app.ws.exceptions.UserServiceException;
 import com.app.ws.io.entity.UserEntity;
 import com.app.ws.io.repository.UserRepository;
+import com.app.ws.shared.dto.AddressDto;
 import com.app.ws.shared.dto.UserDto;
 import com.app.ws.shared.dto.Utils;
 import com.app.ws.ui.model.response.ApiErrorMessages;
@@ -43,8 +45,14 @@ public class UserServiceImpl implements UserService {
 		if (userRepository.findUserByEmail(user.getEmail()) != null)
 			throw new RuntimeException("Record already exists");
 
-		UserEntity userEntity = new UserEntity();
-		BeanUtils.copyProperties(user, userEntity);
+		for (int i = 0; i < user.getAddresses().size(); i++) {
+			AddressDto address = user.getAddresses().get(i);
+			address.setUserDetails(user);
+			address.setAddressId(utils.generateAddressId(30));
+			user.getAddresses().set(i, address);
+		}
+		ModelMapper modelMapper = new ModelMapper();
+		UserEntity userEntity = modelMapper.map(user, UserEntity.class);
 
 		String publicUserId = utils.generateUserId(30);
 		userEntity.setUserId(publicUserId);
@@ -52,8 +60,7 @@ public class UserServiceImpl implements UserService {
 
 		UserEntity storedUserDetails = userRepository.save(userEntity);
 
-		UserDto returnValue = new UserDto();
-		BeanUtils.copyProperties(storedUserDetails, returnValue);
+		UserDto returnValue = modelMapper.map(storedUserDetails, UserDto.class);
 
 		return returnValue;
 	}
@@ -109,7 +116,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deleteUser(String userId) {
 		UserEntity userEntity = userRepository.findByUserId(userId);
-		
+
 		if (userEntity == null)
 			throw new UserServiceException(ApiErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 		userRepository.delete(userEntity);
@@ -118,14 +125,15 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public List<UserDto> getUsers(int page, int limit) {
 		List<UserDto> returnValue = new ArrayList<>();
-		
-		if(page>0) page-=1;
-		
+
+		if (page > 0)
+			page -= 1;
+
 		Pageable pageableRequest = PageRequest.of(page, limit);
 		Page<UserEntity> usersPage = userRepository.findAll(pageableRequest);
 		List<UserEntity> users = usersPage.getContent();
-		
-		for(UserEntity userEntity : users) {
+
+		for (UserEntity userEntity : users) {
 			UserDto userDto = new UserDto();
 			BeanUtils.copyProperties(userEntity, userDto);
 			returnValue.add(userDto);

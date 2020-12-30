@@ -1,10 +1,13 @@
 package com.app.ws.ui.model.request;
 
+import java.util.List;
+
 public class UserDetailsRequestModel {
 	private String firstName;
 	private String lastName;
 	private String email;
 	private String password;
+	private List<AddressModel> addresses; 
 	
 	public String getFirstName() {
 		return firstName;
@@ -29,5 +32,11 @@ public class UserDetailsRequestModel {
 	}
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	public List<AddressModel> getAddresses() {
+		return addresses;
+	}
+	public void setAddresses(List<AddressModel> addresses) {
+		this.addresses = addresses;
 	}
 }
